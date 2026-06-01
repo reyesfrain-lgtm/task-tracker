@@ -6,6 +6,8 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js"></script>
   
   <style>
     :root {
@@ -34,7 +36,7 @@
       padding-bottom: 40px;
     }
 
-    /* ── NAVBAR ── */
+    /* NAVBAR */
     .gda-nav {
       background: var(--accent);
       height: var(--nav-h);
@@ -67,7 +69,7 @@
     }
     .logout-lnk:hover { color: #fff; }
 
-    /* ── LOADING & LOGIN ── */
+    /* LOGIN */
     #loaderBase {
       position: fixed; inset: 0; background: #1a1a18;
       display: flex; flex-direction: column;
@@ -85,26 +87,20 @@
     }
     .login-card h5 { color: #eee; font-size: 1.1rem; font-weight: 600; }
     .login-card label { color: #999; font-size: 0.8rem; font-weight: 600; }
-    .login-card .form-control {
-      background: #1a1a18; border: 1px solid #3a3a38;
-      color: #eee; border-radius: 8px;
-    }
-    .login-card .form-control:focus {
-      background: #1a1a18; border-color: #555;
-      color: #eee; box-shadow: none;
-    }
-    .login-card .form-control::placeholder { color: #555; }
-    .btn-login {
+    .btn-google {
       background: #fff; color: #1a1a18; border: none;
-      border-radius: 8px; font-weight: 700; padding: 10px;
-      width: 100%; transition: opacity 0.15s;
+      border-radius: 8px; font-weight: 700; padding: 12px;
+      width: 100%; transition: opacity 0.15s; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
     }
-    .btn-login:hover { opacity: 0.88; }
+    .btn-google:hover { opacity: 0.88; }
+    #loginError { display: none; margin-bottom: 16px; }
+    #loginError.show { display: block; }
 
-    /* ── LAYOUT ── */
+    /* LAYOUT */
     .main-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
 
-    /* ── TARJETAS ── */
+    /* TASK CARDS */
     .task-card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); margin-bottom: 16px;
@@ -117,7 +113,7 @@
       border-top: 1px solid var(--border); background: #fafaf8;
     }
 
-    /* ── BADGES ── */
+    /* BADGES */
     .prio-badge {
       font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.03em; padding: 2px 8px; border-radius: 4px;
@@ -136,9 +132,8 @@
     .s-review   { background: #fef9e7; color: #d68910; }
     .s-done     { background: #eafaf1; color: #1e8449; }
     .s-mp       { background: #f5eef8; color: #5b2c6f; }
-    .s-cancel   { background: #fdecea; color: #c0392b; }
 
-    /* ── BOTONES ── */
+    /* BUTTONS */
     .btn-dark-sm {
       background: var(--accent); color: #fff; border: none;
       border-radius: 6px; padding: 6px 14px; font-size: 0.8rem;
@@ -153,30 +148,8 @@
       display: inline-flex; align-items: center; gap: 5px;
     }
     .btn-outline-sm:hover { background: var(--accent-light); }
-    .btn-danger-sm {
-      background: var(--danger); color: #fff; border: none;
-      border-radius: 6px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer;
-      display: inline-flex; align-items: center; gap: 5px;
-    }
-    .btn-warning-sm {
-      background: var(--warning); color: #fff; border: none;
-      border-radius: 6px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer;
-      display: inline-flex; align-items: center; gap: 5px;
-    }
-    .btn-mp-sm {
-      background: var(--mp); color: #fff; border: none;
-      border-radius: 6px; padding: 6px 14px; font-size: 0.8rem;
-      cursor: pointer; transition: opacity 0.15s;
-      display: inline-flex; align-items: center; gap: 5px;
-    }
-    .btn-mp-sm:hover { opacity: 0.85; }
-    .btn-success-sm {
-      background: var(--success); color: #fff; border: none;
-      border-radius: 6px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer;
-      display: inline-flex; align-items: center; gap: 5px;
-    }
 
-    /* ── FILTROS ── */
+    /* FILTERS */
     .filtros-bar {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 12px 16px; margin-bottom: 20px;
@@ -187,71 +160,12 @@
       padding: 5px 10px; font-size: 0.82rem;
       background: var(--bg); color: var(--text); min-width: 130px;
     }
-    .filtros-bar select:focus, .filtros-bar input:focus {
-      outline: none; border-color: #999;
-    }
     .filtros-label {
       font-size: 0.78rem; color: var(--muted);
       font-weight: 600; white-space: nowrap;
     }
 
-    /* ── PANEL MANAGER ── */
-    .manager-panel {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 20px; margin-bottom: 24px;
-    }
-    .manager-panel h5 { font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 0; }
-    .audit-item { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; overflow: hidden; }
-    .audit-head {
-      padding: 10px 14px; cursor: pointer;
-      display: flex; justify-content: space-between; align-items: center;
-      background: #fafaf8; transition: background 0.15s;
-    }
-    .audit-head:hover { background: #f0f0ed; }
-    .audit-body { display: none; padding: 14px; background: #fff; border-top: 1px solid var(--border); }
-
-    /* ── MARKETPLACE ── */
-    .mp-card {
-      background: var(--surface); border: 1px solid #d7c8e0;
-      border-left: 4px solid var(--mp); border-radius: var(--radius);
-      padding: 16px; margin-bottom: 14px; transition: box-shadow 0.2s;
-    }
-    .mp-card:hover { box-shadow: var(--shadow); }
-    .mp-card.tomada { border-left-color: #999; }
-    .mp-card.cancelada { border-left-color: var(--danger); opacity: 0.65; }
-    .mp-card.promovida { border-left-color: var(--success); opacity: 0.75; }
-
-    /* ── AVISO DUPLICADOS ── */
-    .aviso-duplicados {
-      background: #fff8e1; border: 1px solid #ffe082;
-      border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;
-    }
-    .aviso-duplicados p { margin: 0 0 6px; font-size: 0.82rem; font-weight: 700; color: #b45309; }
-    .aviso-duplicados ul { margin: 0; padding-left: 18px; font-size: 0.8rem; color: #78350f; }
-
-    /* ── REASIGNACIÓN BADGE ── */
-    .reasignado-badge {
-      background: #f5eef8; border: 1px solid #d7c8e0; border-radius: 6px;
-      padding: 6px 10px; font-size: 0.75rem; color: var(--mp);
-      margin-top: 8px; line-height: 1.4;
-    }
-
-    /* ── TABLAS ── */
-    .gda-table { width: 100%; font-size: 0.85rem; border-collapse: collapse; }
-    .gda-table th {
-      background: #f8f8f5; color: var(--muted); font-size: 0.75rem;
-      font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
-      padding: 10px 14px; border-bottom: 1px solid var(--border); text-align: left;
-    }
-    .gda-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    .gda-table tr:last-child td { border-bottom: none; }
-    .gda-table tr:hover td { background: #fafaf8; }
-
-    /* ── DEADLINE COLORES ── */
-    .deadline-hot  { color: var(--danger); font-weight: 600; }
-    .deadline-warn { color: var(--warning); font-weight: 600; }
-
-    /* ── SECTION HEADER ── */
+    /* SECTION */
     .section-header {
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 20px; padding-bottom: 14px;
@@ -260,11 +174,11 @@
     }
     .section-header h3 { font-size: 1.2rem; font-weight: 700; color: var(--text); margin: 0; }
 
-    /* ── EMPTY STATE ── */
+    /* EMPTY STATE */
     .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
     .empty-state i { font-size: 3rem; display: block; margin-bottom: 12px; }
 
-    /* ── TOASTS ── */
+    /* TOAST */
     .gda-toast {
       position: fixed; bottom: 20px; right: 20px;
       background: #1a1a18; color: #fff; padding: 12px 20px;
@@ -276,25 +190,12 @@
     .gda-toast.success { border-left: 4px solid #1e8449; }
     .gda-toast.error   { border-left: 4px solid #c0392b; }
 
-    /* ── RESPONSIVE ── */
+    /* RESPONSIVE */
     @media (max-width: 768px) {
       .gda-nav { padding: 0 12px; }
       .nav-btn span { display: none; }
-      .nav-btn { padding: 6px 10px; }
-      .user-chip .uname { display: none; }
       .main-wrap { padding: 16px 12px; }
-      .filtros-bar { flex-direction: column; align-items: stretch; }
-      .filtros-bar select, .filtros-bar input { width: 100%; }
-      .section-header { flex-direction: column; align-items: flex-start; }
-      .manager-row { flex-direction: column; }
-      .gda-table { font-size: 0.78rem; }
-      .gda-table th, .gda-table td { padding: 8px 10px; }
       .login-card { margin: 16px; padding: 30px 24px; }
-    }
-    @media (max-width: 480px) {
-      .task-card-head { padding: 12px; }
-      .task-card-body { padding: 12px; }
-      .mp-card { padding: 12px; }
     }
   </style>
 </head>
@@ -311,25 +212,21 @@
     <div class="text-center mb-4">
       <img src="https://lh3.googleusercontent.com/d/1BdDUPadDk_U4Tqx8V7Td1JjlV43OMPs6" height="44" alt="GDA Logo" style="margin-bottom:16px;">
       <h5 class="mb-2">Ingreso al Portal GDA</h5>
-      <p class="text-muted small">Ingresa tus credenciales para continuar</p>
+      <p class="text-muted small">Usa tu cuenta de Google para continuar</p>
     </div>
     
-    <div id="loginError" class="alert alert-danger d-none small py-2 text-center" style="border-radius:8px;"></div>
+    <div id="loginError" class="alert alert-danger small py-2 text-center" style="border-radius:8px;"></div>
     
-    <div class="mb-3">
-      <label class="mb-1 d-block">Correo electrónico</label>
-      <input type="email" id="inEmail" class="form-control" placeholder="tu@correo.com" onkeydown="if(event.key==='Enter')intentarLogin()">
-    </div>
-    <div class="mb-4">
-      <label class="mb-1 d-block">Contraseña</label>
-      <input type="password" id="inPass" class="form-control" placeholder="••••••••" onkeydown="if(event.key==='Enter')intentarLogin()">
-    </div>
-    <button class="btn-login" onclick="intentarLogin()" id="btnIngresar">Entrar al Portal</button>
+    <button class="btn-google" onclick="loginConGoogle()" id="btnGoogle">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="1"></circle>
+      </svg>
+      Entrar con Google
+    </button>
   </div>
 </div>
 
 <div id="appContainer" class="d-none">
-
   <nav class="gda-nav">
     <img src="https://lh3.googleusercontent.com/d/1BdDUPadDk_U4Tqx8V7Td1JjlV43OMPs6" class="logo" alt="GDA">
     <div class="nav-links">
@@ -353,39 +250,12 @@
   </nav>
 
   <div class="main-wrap">
-
     <div id="vistaActivas">
-
-      <div id="managerPanel" class="manager-panel d-none">
-        <div class="d-flex justify-content-between align-items-center mb-3 pb-2" style="border-bottom:1px solid var(--border);">
-          <h5><i class="bi bi-shield-lock"></i> Panel de Manager</h5>
-          <button class="btn-dark-sm" data-bs-toggle="modal" data-bs-target="#modalCrearTarea">
-            <i class="bi bi-plus-lg"></i> Nueva Tarea
-          </button>
-        </div>
-        <div class="row manager-row g-3 align-items-start">
-          <div class="col-md-4">
-            <label class="filtros-label mb-1 d-block">Auditar tareas de:</label>
-            <select id="selectorVA" class="form-select form-select-sm" onchange="cargarTareasDeVA()">
-              <option value="">Selecciona un VA...</option>
-            </select>
-          </div>
-          <div class="col-md-8" id="resultadosVA">
-            <p class="text-muted small mb-0 mt-2">Selecciona un asistente para ver sus tareas pendientes.</p>
-          </div>
-        </div>
-      </div>
-
       <div class="section-header">
         <h3 id="tituloTareas"><i class="bi bi-list-task"></i> Mis Tareas Activas</h3>
-        <div class="d-flex gap-2 flex-wrap"></div>
       </div>
-
-      <div class="filtros-bar" id="filtrosBar">
+      <div class="filtros-bar">
         <span class="filtros-label"><i class="bi bi-funnel"></i> Filtros:</span>
-        <select id="filtroAsignado" onchange="aplicarFiltros()">
-          <option value="">Todos los asignados</option>
-        </select>
         <select id="filtroProyecto" onchange="aplicarFiltros()">
           <option value="">Todos los proyectos</option>
         </select>
@@ -396,25 +266,13 @@
           <option value="En revisión">En revisión</option>
         </select>
         <button class="btn-outline-sm" onclick="limpiarFiltros()"><i class="bi bi-x"></i> Limpiar</button>
-        <span id="contadorFiltros" class="text-muted small ms-auto"></span>
       </div>
-
       <div id="listaTareas" class="row g-3"></div>
     </div>
 
     <div id="vistaMarketplace" class="d-none">
       <div class="section-header">
         <h3><i class="bi bi-shop"></i> Marketplace</h3>
-        <div class="d-flex gap-2">
-          <button class="btn-mp-sm" id="btnPublicarMP" onclick="abrirModalPublicarMP()" style="display:none!important;">
-            <i class="bi bi-plus-lg"></i> Publicar Tarea
-          </button>
-        </div>
-      </div>
-      <p class="text-muted small mb-4">Tareas disponibles para cualquier miembro del equipo. ¡Tómala y suma puntos!</p>
-      <div id="loaderMP" class="text-center py-5 d-none">
-        <div class="spinner-border text-dark" role="status"></div>
-        <p class="mt-2 text-muted small">Cargando marketplace...</p>
       </div>
       <div id="listaMP"></div>
     </div>
@@ -422,266 +280,44 @@
     <div id="vistaHistorico" class="d-none">
       <div class="section-header">
         <h3><i class="bi bi-check-all text-success"></i> Tareas Completadas</h3>
-        <button class="btn-outline-sm" onclick="cambiarVista('activas')"><i class="bi bi-arrow-left"></i> Volver</button>
       </div>
-      <div id="loaderHistorico" class="text-center py-5 d-none">
-        <div class="spinner-border text-dark"></div>
-        <p class="mt-2 text-muted small">Buscando historial...</p>
-      </div>
-      <div class="task-card">
-        <div style="overflow-x:auto;">
-          <table class="gda-table">
-            <thead>
-              <tr><th>ID</th><th>Tarea</th><th>Proyecto</th><th>Asignado</th><th>Completada</th><th>Entregable</th></tr>
-            </thead>
-            <tbody id="tablaHistorico"></tbody>
-          </table>
-        </div>
-      </div>
+      <div id="tablaHistorico"></div>
     </div>
 
     <div id="vistaDashboard" class="d-none">
       <div class="section-header">
-        <h3><i class="bi bi-bar-chart-line-fill" style="color:var(--info)"></i> Rendimiento de la Agencia</h3>
-        <button class="btn-outline-sm" onclick="cambiarVista('activas')"><i class="bi bi-arrow-left"></i> Volver</button>
+        <h3><i class="bi bi-bar-chart-line-fill" style="color:var(--info)"></i> Rendimiento</h3>
       </div>
-      <div id="loaderDashboard" class="text-center py-5 d-none">
-        <div class="spinner-border text-dark"></div>
-        <p class="mt-2 text-muted small">Calculando métricas...</p>
-      </div>
-      <div id="contenidoDashboard" class="d-none">
-        <div class="row g-4">
-          <div class="col-md-5">
-            <div class="task-card p-4 text-center">
-              <p class="text-muted small fw-bold mb-3">Estado General del Backlog</p>
-              <div style="max-width:240px;margin:0 auto;"><canvas id="graficaEstados"></canvas></div>
-            </div>
-          </div>
-          <div class="col-md-7">
-            <div class="task-card p-3">
-              <p class="text-muted small fw-bold mb-3"><i class="bi bi-people-fill"></i> Carga de Trabajo por Usuario</p>
-              <div style="overflow-x:auto;">
-                <table class="gda-table">
-                  <thead>
-                    <tr>
-                      <th>Usuario</th><th class="text-center">Total</th>
-                      <th class="text-center">To Do</th><th class="text-center">In Progress</th>
-                      <th class="text-center">En Revisión</th><th class="text-center">Done</th>
-                    </tr>
-                  </thead>
-                  <tbody id="tablaRendimiento"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div></div><div id="gdaToast" class="gda-toast"></div>
-
-<div class="modal fade" id="modalCrearTarea" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content" style="border-radius:12px;overflow:hidden;">
-      <div class="modal-header" style="background:var(--accent);color:#fff;border:none;">
-        <h5 class="modal-title" style="font-size:0.95rem;"><i class="bi bi-pencil-square"></i> Nueva Tarea</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" style="padding:24px;">
-        <div class="row g-3">
-          <div class="col-md-8">
-            <label class="form-label small fw-bold">Título de la Tarea *</label>
-            <input type="text" id="nt-tarea" class="form-control form-control-sm" placeholder="Ej: Redactar blog...">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label small fw-bold">Prioridad *</label>
-            <select id="nt-prioridad" class="form-select form-select-sm">
-              <option value="Urgent & Important">🔥 Urgent & Important</option>
-              <option value="Urgent">⚡ Urgent</option>
-              <option value="Important">⭐ Important</option>
-              <option value="Poca Prioridad">☕ Poca Prioridad</option>
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label small fw-bold">Proyecto / Cliente *</label>
-            <select id="nt-proyecto" class="form-select form-select-sm"><option value="">Selecciona...</option></select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label small fw-bold">Fecha Límite *</label>
-            <input type="date" id="nt-deadline" class="form-control form-control-sm">
-          </div>
-          <div class="col-12">
-            <label class="form-label small fw-bold">Asignar a *</label>
-            <small class="text-muted d-block mb-1">Mantén <strong>Ctrl</strong> (o <strong>Cmd</strong>) para elegir varios.</small>
-            <select id="nt-asignado" class="form-select form-select-sm" multiple style="height:90px;"></select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label small fw-bold">Link de Apoyo</label>
-            <input type="url" id="nt-link" class="form-control form-control-sm" placeholder="https://...">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label small fw-bold">Notas / Instrucciones</label>
-            <textarea id="nt-recurso" class="form-control form-control-sm" rows="2" placeholder="Detalles adicionales..."></textarea>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer" style="border-top:1px solid var(--border);">
-        <button class="btn-outline-sm" data-bs-dismiss="modal">Cancelar</button>
-        <button class="btn-dark-sm" onclick="enviarNuevaTarea()" id="btnGuardarTarea">
-          <i class="bi bi-send"></i> Guardar y Notificar
-        </button>
-      </div>
+      <div id="dashboardContent"></div>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="modalReasignar" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content" style="border-radius:12px;overflow:hidden;">
-      <div class="modal-header" style="background:#5b2c6f;color:#fff;border:none;">
-        <h5 class="modal-title" style="font-size:0.95rem;"><i class="bi bi-arrow-left-right"></i> Reasignar Tarea</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" style="padding:24px;">
-        <input type="hidden" id="rea-id">
-        <div class="mb-3 p-3 rounded" style="background:#f5eef8;border:1px solid #d7c8e0;">
-          <p class="mb-0 small" id="rea-info" style="color:var(--mp);"></p>
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Reasignar a: *</label>
-          <select id="rea-nuevo" class="form-select form-select-sm">
-            <option value="">Selecciona persona...</option>
-          </select>
-        </div>
-        <div class="alert alert-warning py-2 small" style="border-radius:8px;">
-          <i class="bi bi-envelope"></i> Se notificará por correo al asignado anterior y al nuevo. Se guardará nota en la tarea.
-        </div>
-      </div>
-      <div class="modal-footer" style="border-top:1px solid var(--border);">
-        <button class="btn-outline-sm" data-bs-dismiss="modal">Cancelar</button>
-        <button class="btn-mp-sm" onclick="confirmarReasignacion()" id="btnConfirmarRea">
-          <i class="bi bi-arrow-left-right"></i> Confirmar Reasignación
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="modalPublicarMP" tabindex="-1">
-  <div class="modal-dialog modal-dialog-scrollable">
-    <div class="modal-content" style="border-radius:12px;overflow:hidden;">
-      <div class="modal-header" style="background:var(--mp);color:#fff;border:none;">
-        <h5 class="modal-title" style="font-size:0.95rem;"><i class="bi bi-shop"></i> Publicar en Marketplace</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" style="padding:24px;">
-        <div id="avisoDuplicados" class="aviso-duplicados d-none">
-          <p><i class="bi bi-exclamation-triangle-fill"></i> Ya tienes estas tareas activas en el Marketplace:</p>
-          <ul id="listaDuplicados"></ul>
-        </div>
-        <div class="row g-3">
-          <div class="col-12">
-            <label class="form-label small fw-bold">Título de la Tarea *</label>
-            <input type="text" id="mp-titulo" class="form-control form-control-sm" placeholder="Ej: Diseñar banner para redes...">
-          </div>
-          <div class="col-12">
-            <label class="form-label small fw-bold">Descripción / Instrucciones *</label>
-            <textarea id="mp-descripcion" class="form-control form-control-sm" rows="3" placeholder="Explica qué se debe hacer..."></textarea>
-          </div>
-          <div class="col-md-7">
-            <label class="form-label small fw-bold">Proyecto / Cliente *</label>
-            <select id="mp-proyecto" class="form-select form-select-sm"><option value="">Selecciona...</option></select>
-          </div>
-          <div class="col-md-5">
-            <label class="form-label small fw-bold">Bonus / Reconocimiento</label>
-            <input type="text" id="mp-bonus" class="form-control form-control-sm" placeholder="Ej: +$5, Puntos...">
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer" style="border-top:1px solid var(--border);">
-        <button class="btn-outline-sm" data-bs-dismiss="modal">Cancelar</button>
-        <button class="btn-mp-sm" onclick="publicarMP()" id="btnPublicarMPGuardar">
-          <i class="bi bi-megaphone"></i> Publicar y Notificar Equipo
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="modalActualizarMP" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content" style="border-radius:12px;overflow:hidden;">
-      <div class="modal-header" style="background:var(--mp);color:#fff;border:none;">
-        <h5 class="modal-title" style="font-size:0.95rem;"><i class="bi bi-arrow-up-circle"></i> Actualizar tarea MP</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" style="padding:24px;">
-        <input type="hidden" id="mp-update-id">
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Link de entregable (Output)</label>
-          <input type="url" id="mp-update-link" class="form-control form-control-sm" placeholder="https://...">
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Estado</label>
-          <select id="mp-update-estado" class="form-select form-select-sm">
-            <option value="En Progreso">En Progreso</option>
-            <option value="En revisión">En revisión</option>
-            <option value="Done">Done ✓</option>
-          </select>
-        </div>
-      </div>
-      <div class="modal-footer" style="border-top:1px solid var(--border);">
-        <button class="btn-outline-sm" data-bs-dismiss="modal">Cancelar</button>
-        <button class="btn-mp-sm" onclick="guardarActualizacionMP()" id="btnGuardarMP">
-          <i class="bi bi-check-lg"></i> Guardar
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="modalPromover" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content" style="border-radius:12px;overflow:hidden;">
-      <div class="modal-header" style="background:var(--success);color:#fff;border:none;">
-        <h5 class="modal-title" style="font-size:0.95rem;"><i class="bi bi-arrow-up-circle"></i> Promover al Backlog</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" style="padding:24px;">
-        <input type="hidden" id="prom-id">
-        <div class="mb-3 p-3 rounded" style="background:#eafaf1;border:1px solid #a9dfbf;">
-          <p class="mb-0 small fw-bold" id="prom-info" style="color:var(--success);"></p>
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Asignar a: *</label>
-          <select id="prom-asignado" class="form-select form-select-sm">
-            <option value="">Selecciona persona...</option>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Fecha Límite: *</label>
-          <input type="date" id="prom-deadline" class="form-control form-control-sm">
-        </div>
-        <p class="text-muted small mb-0"><i class="bi bi-info-circle"></i> Se creará una nueva tarea en el Backlog y se notificará al asignado. La tarea del Marketplace quedará marcada como "Promovida al Backlog".</p>
-      </div>
-      <div class="modal-footer" style="border-top:1px solid var(--border);">
-        <button class="btn-outline-sm" data-bs-dismiss="modal">Cancelar</button>
-        <button class="btn-success-sm" onclick="confirmarPromover()" id="btnConfirmarProm">
-          <i class="bi bi-check-lg"></i> Promover y Asignar
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+<div id="gdaToast" class="gda-toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 // ═══════════════════════════════════════════════════
-// ⚠️ CONFIGURACIÓN CRÍTICA - CAMBIAR URL DE API
+// FIREBASE CONFIG - REEMPLAZA CON TUS DATOS
 // ═══════════════════════════════════════════════════
-// Reemplaza esto con la URL de tu deployment de Google Apps Script
-const API_URL = 'https://cors-anywhere.herokuapp.com/https://script.google.com/macros/s/AKfycbxMJDt9JCoLndi1KGMuemMscpXQXrw1QI0_xec/exec';
+const firebaseConfig = {
+  apiKey: "AIzaSyDeSGdwJ_7hPud-1svEP-x5cavrSrGOOJM",
+  authDomain: "trackerweb-fe0ad.firebaseapp.com",
+  projectId: "trackerweb-fe0ad",
+  storageBucket: "trackerweb-fe0ad.firebasestorage.app",
+  messagingSenderId: "210227158679",  
+  appId: "1:210227158679:web:24a280c1070485068453d2",
+};
+
+const firebase = window.firebase;
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+// ═══════════════════════════════════════════════════
+// API URL - REEMPLAZA CON TU GAS
+// ═══════════════════════════════════════════════════
+const API_URL = 'https://script.google.com/macros/s/AKfycbxpWIDF9EoGLndikGRWuemWscpX0Xrwi0IQ2y0ECNeNlgtBSzIqCQRtzgzeDwtJ5uTl/exec';
 
 // ═══════════════════════════════════════════════════
 // ESTADO GLOBAL
@@ -692,67 +328,47 @@ let state = {
   rol: "",
   esManager: false,
   tareasRaw: [],
-  equipoCompleto: [],
-  chartInstancia: null
+  equipoCompleto: []
 };
 
 // ═══════════════════════════════════════════════════
-// ARRANQUE Y AUTENTICACIÓN
+// FIREBASE LOGIN
 // ═══════════════════════════════════════════════════
-window.onload = () => {
-  mostrarLogin();
-};
-
-function mostrarLogin() {
-  document.getElementById('loaderBase').classList.add('d-none');
-  document.getElementById('loginScreen').classList.remove('d-none');
-}
-
-function intentarLogin() {
-  const mail = document.getElementById('inEmail').value.trim();
-  const pass  = document.getElementById('inPass').value.trim();
-  const errDiv = document.getElementById('loginError');
-  const btn    = document.getElementById('btnIngresar');
+function loginConGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  const btnGoogle = document.getElementById('btnGoogle');
+  btnGoogle.disabled = true;
+  btnGoogle.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Verificando...';
   
-  if (!mail || !pass) { 
-    errDiv.innerText = "Completa ambos campos."; 
-    errDiv.classList.remove('d-none'); 
-    return; 
-  }
-  
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Verificando...';
-  
-  callAPI('procesarLogin', { email: mail, password: pass })
-    .then(res => {
-      if (res.errorAuth) {
-        errDiv.innerText = res.errorAuth; 
-        errDiv.classList.remove('d-none');
-        btn.disabled = false; 
-        btn.innerHTML = 'Entrar al Portal';
-      } else if (res.requireLogin) {
-        errDiv.innerText = "Correo no reconocido en la base de datos."; 
-        errDiv.classList.remove('d-none');
-        btn.disabled = false; 
-        btn.innerHTML = 'Entrar al Portal';
-      } else { 
-        iniciarSesion(res); 
-      }
+  auth.signInWithPopup(provider)
+    .then(result => {
+      const emailUsuario = result.user.email;
+      verificarEmailEnSheets(emailUsuario);
     })
-    .catch(err => {
-      errDiv.innerText = "Error al conectar: " + err.message; 
-      errDiv.classList.remove('d-none');
-      btn.disabled = false; 
-      btn.innerHTML = 'Entrar al Portal';
+    .catch(error => {
+      mostrarError('Error de autenticación: ' + error.message);
+      btnGoogle.disabled = false;
+      btnGoogle.innerHTML = '<i class="bi bi-google me-1"></i> Entrar con Google';
     });
 }
 
-function cerrarSesion() {
-  document.getElementById('inEmail').value = '';
-  document.getElementById('inPass').value = '';
-  document.getElementById('loginError').classList.add('d-none');
-  document.getElementById('appContainer').classList.add('d-none');
-  document.getElementById('loginScreen').classList.remove('d-none');
+function verificarEmailEnSheets(emailUsuario) {
+  callAPI('verificarEmail', { email: emailUsuario })
+    .then(res => {
+      if (res.autorizado) {
+        iniciarSesion(res);
+      } else {
+        auth.signOut();
+        mostrarError('Tu email no está registrado en el sistema.');
+        document.getElementById('btnGoogle').disabled = false;
+        document.getElementById('btnGoogle').innerHTML = '<i class="bi bi-google me-1"></i> Entrar con Google';
+      }
+    })
+    .catch(err => {
+      mostrarError('Error: ' + err.message);
+      document.getElementById('btnGoogle').disabled = false;
+      document.getElementById('btnGoogle').innerHTML = '<i class="bi bi-google me-1"></i> Entrar con Google';
+    });
 }
 
 function iniciarSesion(res) {
@@ -768,17 +384,21 @@ function iniciarSesion(res) {
   document.getElementById('userName').textContent = `${res.user} · ${res.rol}`;
 
   if (state.esManager) {
-    document.getElementById('managerPanel').classList.remove('d-none');
     document.getElementById('nav-dashboard').style.display = 'flex';
     document.getElementById('tituloTareas').innerHTML = '<i class="bi bi-list-task"></i> Tareas Activas — Agencia';
-    document.getElementById('btnPublicarMP').style.display = 'inline-flex';
-    callAPI('obtenerDatosConfiguracion', {}).then(llenarSelectores);
-  } else {
-    const fA = document.getElementById('filtroAsignado');
-    if (fA && fA.parentElement) fA.parentElement.style.display = 'none';
   }
 
   renderizarTareas(res.tareas);
+}
+
+function cerrarSesion() {
+  auth.signOut().then(() => {
+    document.getElementById('appContainer').classList.add('d-none');
+    document.getElementById('loginScreen').classList.remove('d-none');
+    document.getElementById('loginError').classList.remove('show');
+    document.getElementById('btnGoogle').disabled = false;
+    document.getElementById('btnGoogle').innerHTML = '<i class="bi bi-google me-1"></i> Entrar con Google';
+  });
 }
 
 // ═══════════════════════════════════════════════════
@@ -799,7 +419,7 @@ function callAPI(action, params = {}) {
 }
 
 // ═══════════════════════════════════════════════════
-// NAVEGACIÓN
+// VISTAS
 // ═══════════════════════════════════════════════════
 function cambiarVista(vista) {
   ['activas','marketplace','historico','dashboard'].forEach(v => {
@@ -813,32 +433,16 @@ function cambiarVista(vista) {
 
   if (vista === 'activas') {
     document.getElementById('vistaActivas').classList.remove('d-none');
-    callAPI('cargarSesion', { email: state.email })
-      .then(res => renderizarTareas(res.tareas))
-      .catch(err => toast('Error: ' + err.message, 'error'));
-  } else if (vista === 'marketplace') {
-    document.getElementById('vistaMarketplace').classList.remove('d-none');
-    cargarMarketplace();
-  } else if (vista === 'historico') {
-    document.getElementById('vistaHistorico').classList.remove('d-none');
-    document.getElementById('loaderHistorico').classList.remove('d-none');
-    document.getElementById('tablaHistorico').innerHTML = '';
-    callAPI('obtenerHistorico', { emailLogueado: state.email })
-      .then(renderizarHistorico)
-      .catch(err => toast('Error: ' + err.message, 'error'));
-  } else if (vista === 'dashboard') {
-    document.getElementById('vistaDashboard').classList.remove('d-none');
-    document.getElementById('loaderDashboard').classList.remove('d-none');
-    document.getElementById('contenidoDashboard').classList.add('d-none');
-    callAPI('obtenerDatosDashboard', {})
-      .then(renderizarDashboard)
-      .catch(err => toast('Error: ' + err.message, 'error'));
+    cargarTareas();
   }
 }
 
-// ═══════════════════════════════════════════════════
-// RENDERIZAR TAREAS + FILTROS
-// ═══════════════════════════════════════════════════
+function cargarTareas() {
+  callAPI('cargarSesion', { email: state.email })
+    .then(res => renderizarTareas(res.tareas))
+    .catch(err => toast('Error: ' + err.message, 'error'));
+}
+
 function renderizarTareas(tareas) {
   state.tareasRaw = tareas || [];
   poblarFiltros(state.tareasRaw);
@@ -846,35 +450,25 @@ function renderizarTareas(tareas) {
 }
 
 function poblarFiltros(tareas) {
-  const fA = document.getElementById('filtroAsignado');
   const fP = document.getElementById('filtroProyecto');
-  const valA = fA.value, valP = fP.value;
-  const asignados = [...new Set(tareas.map(t => t.asignado).filter(Boolean))].sort();
+  const valP = fP.value;
   const proyectos = [...new Set(tareas.map(t => t.proyecto).filter(Boolean))].sort();
-  fA.innerHTML = '<option value="">Todos los asignados</option>';
-  asignados.forEach(a => fA.innerHTML += `<option value="${a}" ${a===valA?'selected':''}>${a}</option>`);
   fP.innerHTML = '<option value="">Todos los proyectos</option>';
   proyectos.forEach(p => fP.innerHTML += `<option value="${p}" ${p===valP?'selected':''}>${p}</option>`);
 }
 
 function aplicarFiltros() {
-  const fA = document.getElementById('filtroAsignado').value.toLowerCase();
   const fP = document.getElementById('filtroProyecto').value.toLowerCase();
   const fS = document.getElementById('filtroStatus').value.toLowerCase();
   const filtradas = state.tareasRaw.filter(t => {
-    const matchA = !fA || (t.asignado && t.asignado.toLowerCase().includes(fA));
     const matchP = !fP || (t.proyecto && t.proyecto.toLowerCase() === fP);
     const matchS = !fS || (t.status && t.status.toLowerCase().includes(fS.replace('en revisión','revisión')));
-    return matchA && matchP && matchS;
+    return matchP && matchS;
   });
-  const filtroActivo = fA || fP || fS;
-  document.getElementById('contadorFiltros').textContent =
-    filtroActivo ? `${filtradas.length} de ${state.tareasRaw.length} tareas` : `${state.tareasRaw.length} tareas`;
   pintarTarjetas(filtradas);
 }
 
 function limpiarFiltros() {
-  document.getElementById('filtroAsignado').value = '';
   document.getElementById('filtroProyecto').value = '';
   document.getElementById('filtroStatus').value = '';
   aplicarFiltros();
@@ -883,655 +477,34 @@ function limpiarFiltros() {
 function pintarTarjetas(tareas) {
   const cont = document.getElementById('listaTareas');
   if (tareas.length === 0) {
-    cont.innerHTML = `<div class="col-12"><div class="empty-state"><i class="bi bi-inbox"></i><p>No hay tareas que coincidan con los filtros.</p></div></div>`;
+    cont.innerHTML = `<div class="col-12"><div class="empty-state"><i class="bi bi-inbox"></i><p>No hay tareas.</p></div></div>`;
     return;
   }
 
-  cont.innerHTML = tareas.map(t => {
-    const prioClass    = getPrioClass(t.prioridad);
-    const statusClass  = getStatusClass(t.status);
-    const deadlineClass = getDeadlineClass(t.deadline);
-
-    const asignadoHtml = state.esManager
-      ? `<span class="text-muted" style="font-size:0.75rem;"><i class="bi bi-person-badge"></i> ${t.asignado}</span>`
-      : '';
-
-    const recursoHtml = t.descripcionLink
-      ? `<a href="${t.descripcionLink}" target="_blank" class="btn-outline-sm w-100 d-flex justify-content-center mb-3"><i class="bi bi-play-circle"></i> Ver recurso de apoyo</a>`
-      : t.descripcion ? `<div class="mb-3 p-2 rounded" style="background:#f2f2ef;font-size:0.85rem;"><strong>Notas:</strong> ${t.descripcion}</div>` : '';
-
-    const historialHtml = t.historialReasignacion
-      ? `<div class="reasignado-badge mb-3"><i class="bi bi-arrow-left-right"></i> ${t.historialReasignacion.replace(/\n/g, '<br>')}</div>`
-      : '';
-
-    const reasignarBtn = state.esManager
-      ? `<button class="btn-warning-sm w-100 justify-content-center mt-2"
-           onclick="abrirModalReasignar('${t.id}','${t.tarea.replace(/'/g,"\\'")}','${t.asignado}')">
-           <i class="bi bi-arrow-left-right"></i> Reasignar
-         </button>`
-      : '';
-
-    return `
-      <div class="col-md-6 col-lg-4">
-        <div class="task-card" id="card-${t.id}">
-          <div class="task-card-head">
-            <div class="d-flex justify-content-between align-items-start mb-1">
-              <span class="text-muted" style="font-size:0.72rem;font-weight:700;">${t.id}</span>
-              <span class="prio-badge ${prioClass}">${t.prioridad || 'Normal'}</span>
-            </div>
-            <p class="mb-1 fw-bold" style="font-size:0.9rem;color:var(--text);line-height:1.3;">${t.tarea}</p>
-            <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-1">
-              <div>
-                <span style="font-size:0.75rem;color:var(--muted);"><i class="bi bi-folder2"></i> ${t.proyecto}</span>
-                <span class="status-badge ${statusClass} ms-2">${t.status}</span>
-              </div>
-              ${asignadoHtml}
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-2">
-              <span class="${deadlineClass}" style="font-size:0.78rem;"><i class="bi bi-calendar-event"></i> ${t.deadline}</span>
-              <button class="btn-dark-sm" onclick="toggleBody('detalle-${t.id}', this)">
-                Abrir <i class="bi bi-chevron-down"></i>
-              </button>
-            </div>
+  cont.innerHTML = tareas.map(t => `
+    <div class="col-md-6 col-lg-4">
+      <div class="task-card">
+        <div class="task-card-head">
+          <div class="d-flex justify-content-between align-items-start mb-1">
+            <span class="text-muted" style="font-size:0.72rem;font-weight:700;">${t.id}</span>
+            <span class="prio-badge prio-important">${t.prioridad || 'Normal'}</span>
           </div>
-          <div id="detalle-${t.id}" class="task-card-body">
-            ${historialHtml}
-            ${recursoHtml}
-            <div class="mb-3">
-              <label class="form-label small fw-bold text-muted">Link de entrega (Output):</label>
-              <input type="url" id="link-${t.id}" class="form-control form-control-sm"
-                placeholder="Pega tu enlace aquí..."
-                value="${t.outputLink && t.outputLink !== 'Ver Entregable' ? t.outputLink : ''}">
-            </div>
-            <div class="mb-3">
-              <label class="form-label small fw-bold text-muted">Estado:</label>
-              <select id="estado-${t.id}" class="form-select form-select-sm">
-                <option value="To Do" ${t.status==='To Do'?'selected':''}>To Do</option>
-                <option value="In Progress" ${t.status.toLowerCase().includes('progress')?'selected':''}>In Progress</option>
-                <option value="En revisión" ${t.status.toLowerCase().includes('revisión')?'selected':''}>En revisión</option>
-                <option value="Done" ${t.status==='Done'?'selected':''}>Done ✓</option>
-              </select>
-            </div>
-            <button id="btn-save-${t.id}" class="btn-dark-sm w-100 justify-content-center" onclick="guardarCambios('${t.id}')">
-              <i class="bi bi-check-lg"></i> Guardar Cambios
-            </button>
-            ${reasignarBtn}
-          </div>
+          <p class="mb-1 fw-bold" style="font-size:0.9rem;color:var(--text);line-height:1.3;">${t.tarea}</p>
+          <div style="font-size:0.75rem;color:var(--muted);"><i class="bi bi-folder2"></i> ${t.proyecto}</div>
+          <span class="status-badge s-todo ms-2">${t.status}</span>
         </div>
       </div>
-    `;
-  }).join('');
+    </div>
+  `).join('');
 }
 
 // ═══════════════════════════════════════════════════
-// GUARDAR CAMBIOS TAREA
+// HELPERS
 // ═══════════════════════════════════════════════════
-function guardarCambios(id) {
-  const link   = document.getElementById(`link-${id}`).value;
-  const estado = document.getElementById(`estado-${id}`).value;
-  const btn    = document.getElementById(`btn-save-${id}`);
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
-  
-  callAPI('actualizarTarea', {
-    idTarea: id,
-    nuevoLink: link,
-    nuevoEstado: estado
-  })
-    .then(res => {
-      if (res.error) {
-        toast(res.error, 'error');
-        btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Guardar Cambios';
-      } else {
-        toast(res.msg, 'success');
-        if (estado === 'Done') {
-          const card = document.getElementById(`card-${id}`);
-          card.style.opacity = '0.4';
-          setTimeout(() => {
-            const col = card.closest('[class*="col-"]');
-            if (col) col.remove();
-            state.tareasRaw = state.tareasRaw.filter(t => t.id !== id);
-            aplicarFiltros();
-          }, 500);
-        } else {
-          btn.disabled = false;
-          btn.innerHTML = '<i class="bi bi-check-lg"></i> ¡Guardado!';
-          setTimeout(() => { btn.innerHTML = '<i class="bi bi-check-lg"></i> Guardar Cambios'; }, 2000);
-        }
-      }
-    })
-    .catch(err => {
-      toast('Error: ' + err.message, 'error');
-      btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Guardar Cambios';
-    });
-}
-
-// ═══════════════════════════════════════════════════
-// REASIGNACIÓN
-// ═══════════════════════════════════════════════════
-function abrirModalReasignar(id, tarea, asignadoActual) {
-  document.getElementById('rea-id').value = id;
-  document.getElementById('rea-info').innerHTML =
-    `<strong>${id}</strong>: ${tarea}<br><span style="color:#888;">Actualmente asignada a: <strong>${asignadoActual}</strong></span>`;
-
-  const sel = document.getElementById('rea-nuevo');
-  sel.innerHTML = '<option value="">Selecciona persona...</option>';
-  state.equipoCompleto.forEach(m => {
-    sel.innerHTML += `<option value="${m}">${m}</option>`;
-  });
-
-  new bootstrap.Modal(document.getElementById('modalReasignar')).show();
-}
-
-function confirmarReasignacion() {
-  const id        = document.getElementById('rea-id').value;
-  const nuevoAsig = document.getElementById('rea-nuevo').value;
-  const btn       = document.getElementById('btnConfirmarRea');
-
-  if (!nuevoAsig) { toast('Selecciona a quién reasignar la tarea.', 'error'); return; }
-
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Reasignando...';
-
-  callAPI('reasignarTarea', {
-    idTarea: id,
-    nuevoAsignado: nuevoAsig,
-    emailManager: state.email
-  })
-    .then(res => {
-      if (res.error) {
-        toast(res.error, 'error');
-      } else {
-        toast(res.msg, 'success');
-        bootstrap.Modal.getInstance(document.getElementById('modalReasignar')).hide();
-        callAPI('cargarSesion', { email: state.email })
-          .then(r => renderizarTareas(r.tareas))
-          .catch(err => toast('Error: ' + err.message, 'error'));
-      }
-      btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-arrow-left-right"></i> Confirmar Reasignación';
-    })
-    .catch(err => {
-      toast('Error: ' + err.message, 'error');
-      btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-arrow-left-right"></i> Confirmar Reasignación';
-    });
-}
-
-// ═══════════════════════════════════════════════════
-// MANAGER: SELECTORES Y AUDITORÍA
-// ═══════════════════════════════════════════════════
-function llenarSelectores(datos) {
-  state.equipoCompleto = datos.equipo;
-
-  const sVA        = document.getElementById('selectorVA');
-  const sNtAsig    = document.getElementById('nt-asignado');
-  const sNtProy    = document.getElementById('nt-proyecto');
-  const sMpProy    = document.getElementById('mp-proyecto');
-  const sPromAsig  = document.getElementById('prom-asignado');
-  const sReaNuevo  = document.getElementById('rea-nuevo');
-
-  sVA.innerHTML = '<option value="">Selecciona un VA...</option>';
-  sNtAsig.innerHTML = '';
-  sNtProy.innerHTML = '<option value="">Selecciona...</option>';
-  sMpProy.innerHTML = '<option value="">Selecciona...</option>';
-  sPromAsig.innerHTML = '<option value="">Selecciona persona...</option>';
-  sReaNuevo.innerHTML = '<option value="">Selecciona persona...</option>';
-
-  datos.equipo.forEach(m => {
-    sVA.innerHTML     += `<option value="${m}">${m}</option>`;
-    sNtAsig.innerHTML += `<option value="${m}">${m}</option>`;
-    sPromAsig.innerHTML += `<option value="${m}">${m}</option>`;
-    sReaNuevo.innerHTML += `<option value="${m}">${m}</option>`;
-  });
-  datos.proyectos.forEach(p => {
-    sNtProy.innerHTML += `<option value="${p}">${p}</option>`;
-    sMpProy.innerHTML += `<option value="${p}">${p}</option>`;
-  });
-}
-
-function cargarTareasDeVA() {
-  const nombre = document.getElementById('selectorVA').value;
-  const div    = document.getElementById('resultadosVA');
-  if (!nombre) { div.innerHTML = '<p class="text-muted small mb-0">Selecciona un asistente.</p>'; return; }
-  div.innerHTML = '<div class="spinner-border spinner-border-sm text-dark me-2"></div><span class="text-muted small">Cargando...</span>';
-
-  callAPI('obtenerTareasEquipo', { nombre })
-    .then(tareas => {
-      if (tareas.length === 0) {
-        div.innerHTML = `<p class="text-success small mb-0"><i class="bi bi-check-circle"></i> <strong>${nombre}</strong> no tiene tareas pendientes.</p>`;
-        return;
-      }
-      div.innerHTML = `<p class="small fw-bold mb-2">Auditoría de ${nombre} — ${tareas.length} activas:</p>
-        <div style="max-height:350px;overflow-y:auto;">
-          ${tareas.map(t => {
-            const esRevision = t.status.toLowerCase().includes('revisión');
-            const linkHtml = t.outputLink
-              ? `<a href="${t.outputLink}" target="_blank" class="btn-outline-sm w-100 d-flex justify-content-center mb-2"><i class="bi bi-box-arrow-up-right me-1"></i> Ver entregable</a>`
-              : esRevision ? `<div class="alert alert-warning py-1 px-2 small mb-2">Marcó "En revisión" sin adjuntar link.</div>` : '';
-            return `
-              <div class="audit-item">
-                <div class="audit-head" onclick="toggleBody('audit-${t.id}', this)">
-                  <div style="min-width:0;">
-                    <p class="mb-0 fw-bold text-truncate" style="font-size:0.82rem;">${t.tarea}</p>
-                    <p class="mb-0 text-muted" style="font-size:0.72rem;">${t.id} · ${t.proyecto} · Vence: ${t.deadline}</p>
-                  </div>
-                  <span class="status-badge ${getStatusClass(t.status)} ms-2 flex-shrink-0">${t.status}</span>
-                </div>
-                <div id="audit-${t.id}" class="audit-body" style="display:none;">
-                  ${linkHtml}
-                  <button id="rec-${t.id}" class="btn-danger-sm w-100 mb-2" onclick="lanzarRecordatorio('${t.id}')">
-                    <i class="bi bi-bell-fill me-1"></i> Enviar Recordatorio
-                  </button>
-                  <button class="btn-warning-sm w-100" onclick="abrirModalReasignar('${t.id}','${t.tarea.replace(/'/g,"\\'")}','${t.asignado}')">
-                    <i class="bi bi-arrow-left-right me-1"></i> Reasignar
-                  </button>
-                </div>
-              </div>`;
-          }).join('')}
-        </div>`;
-    })
-    .catch(err => toast('Error: ' + err.message, 'error'));
-}
-
-function lanzarRecordatorio(id) {
-  const btn = document.getElementById(`rec-${id}`);
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enviando...';
-  
-  callAPI('enviarRecordatorioVA', {
-    idTarea: id,
-    emailManager: state.email
-  })
-    .then(res => {
-      if (res.error) { toast(res.error, 'error'); btn.disabled = false; btn.innerHTML = '<i class="bi bi-bell-fill me-1"></i> Enviar Recordatorio'; }
-      else { toast(res.msg, 'success'); btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Enviado'; }
-    })
-    .catch(err => {
-      toast('Error: ' + err.message, 'error');
-      btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-bell-fill me-1"></i> Enviar Recordatorio';
-    });
-}
-
-function enviarNuevaTarea() {
-  const tarea    = document.getElementById('nt-tarea').value.trim();
-  const proyecto = document.getElementById('nt-proyecto').value;
-  const deadline = document.getElementById('nt-deadline').value;
-  const selectA  = document.getElementById('nt-asignado');
-  const asignados = Array.from(selectA.selectedOptions).map(o => o.value).join(', ');
-
-  if (!tarea || !proyecto || !deadline || !asignados) {
-    toast('Completa todos los campos obligatorios y selecciona al menos un asignado.', 'error'); return;
-  }
-  const btn = document.getElementById('btnGuardarTarea');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
-
-  callAPI('crearNuevaTarea', {
-    tarea,
-    prioridad: document.getElementById('nt-prioridad').value,
-    proyecto,
-    deadline,
-    asignado: asignados,
-    link: document.getElementById('nt-link').value,
-    recurso: document.getElementById('nt-recurso').value
-  })
-    .then(res => {
-      toast(res.msg, 'success');
-      bootstrap.Modal.getInstance(document.getElementById('modalCrearTarea')).hide();
-      document.getElementById('nt-tarea').value = '';
-      document.getElementById('nt-link').value = '';
-      document.getElementById('nt-recurso').value = '';
-      btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-send"></i> Guardar y Notificar';
-      callAPI('cargarSesion', { email: state.email })
-        .then(r => renderizarTareas(r.tareas))
-        .catch(err => toast('Error: ' + err.message, 'error'));
-    })
-    .catch(err => {
-      toast('Error: ' + err.message, 'error');
-      btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-send"></i> Guardar y Notificar';
-    });
-}
-
-// ═══════════════════════════════════════════════════
-// MARKETPLACE
-// ═══════════════════════════════════════════════════
-function cargarMarketplace() {
-  document.getElementById('loaderMP').classList.remove('d-none');
-  document.getElementById('listaMP').innerHTML = '';
-  
-  callAPI('obtenerTareasMarketplace', {})
-    .then(renderizarMP)
-    .catch(err => toast('Error: ' + err.message, 'error'));
-}
-
-function renderizarMP(tareas) {
-  document.getElementById('loaderMP').classList.add('d-none');
-  const cont = document.getElementById('listaMP');
-
-  if (tareas.length === 0) {
-    cont.innerHTML = `<div class="empty-state"><i class="bi bi-shop"></i><p>No hay tareas en el Marketplace.</p>${state.esManager ? '<p class="text-muted small">Publica una usando el botón de arriba.</p>' : ''}</div>`;
-    return;
-  }
-
-  const disponibles = tareas.filter(t => t.status === 'Disponible');
-  const activas     = tareas.filter(t => t.status !== 'Disponible' && t.status !== 'Done' && t.status !== 'Cancelada' && t.status !== 'Promovida al Backlog');
-  const hechas      = tareas.filter(t => t.status === 'Done');
-  const archivadas  = tareas.filter(t => t.status === 'Cancelada' || t.status === 'Promovida al Backlog');
-
-  let html = '';
-  if (disponibles.length > 0) html += seccionMP('Disponibles', disponibles.length, disponibles);
-  if (activas.length > 0) html += seccionMP('En progreso', activas.length, activas);
-  if (hechas.length > 0) html += seccionMP('Completadas', hechas.length, hechas);
-  if (archivadas.length > 0 && state.esManager) html += seccionMP('Archivadas', archivadas.length, archivadas);
-
-  cont.innerHTML = html || `<div class="empty-state"><i class="bi bi-shop"></i><p>No hay tareas disponibles.</p></div>`;
-}
-
-function seccionMP(titulo, count, tareas) {
-  return `<p class="text-muted small fw-bold mb-2 mt-4" style="text-transform:uppercase;letter-spacing:0.05em;">${titulo} (${count})</p>`
-    + tareas.map(t => mpCard(t)).join('');
-}
-
-function mpCard(t) {
-  const esDisponible = t.status === 'Disponible';
-  const esMia        = t.tomadaPor === state.nombre;
-  const esDone       = t.status === 'Done';
-  const esCancelada  = t.status === 'Cancelada';
-  const esPromovida  = t.status === 'Promovida al Backlog';
-
-  let cardClass = '';
-  if (!esDisponible && !esCancelada && !esPromovida) cardClass = 'tomada';
-  if (esCancelada)  cardClass = 'cancelada';
-  if (esPromovida)  cardClass = 'promovida';
-
-  let accionHtml = '';
-
-  if (esDisponible) {
-    if (!state.esManager) {
-      accionHtml = `<button class="btn-mp-sm" onclick="tomarTarea('${t.id}')"><i class="bi bi-hand-index me-1"></i> Tomar esta tarea</button>`;
-    } else {
-      accionHtml = `
-        <div class="d-flex gap-2 flex-wrap">
-          <button class="btn-mp-sm" onclick="tomarTarea('${t.id}')"><i class="bi bi-hand-index me-1"></i> Tomar</button>
-          <button class="btn-success-sm" onclick="abrirModalPromover('${t.id}','${t.titulo.replace(/'/g,"\\'")}')"><i class="bi bi-arrow-up-circle me-1"></i> Promover</button>
-          <button class="btn-danger-sm" onclick="cancelarMP('${t.id}')"><i class="bi bi-x-circle me-1"></i> Cancelar</button>
-        </div>`;
-    }
-  } else if (esMia && !esDone && !esCancelada && !esPromovida) {
-    accionHtml = `<button class="btn-outline-sm" onclick="abrirActualizarMP('${t.id}')"><i class="bi bi-arrow-up-circle me-1"></i> Actualizar estado</button>`;
-    if (state.esManager) {
-      accionHtml += ` <button class="btn-danger-sm" onclick="cancelarMP('${t.id}')"><i class="bi bi-x-circle me-1"></i> Cancelar</button>`;
-    }
-  } else if (state.esManager && !esDisponible && !esDone && !esCancelada && !esPromovida) {
-    accionHtml = `<button class="btn-danger-sm" onclick="cancelarMP('${t.id}')"><i class="bi bi-x-circle me-1"></i> Cancelar</button>`;
-  }
-
-  const bonusHtml   = t.bonus   ? `<span class="status-badge s-mp ms-2"><i class="bi bi-gift"></i> ${t.bonus}</span>` : '';
-  const tomadaHtml  = t.tomadaPor ? `<span class="text-muted" style="font-size:0.75rem;"><i class="bi bi-person-check"></i> ${t.tomadaPor}</span>` : '';
-
-  return `
-    <div class="mp-card ${cardClass}">
-      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-1">
-        <div>
-          <span class="text-muted" style="font-size:0.72rem;font-weight:700;">${t.id}</span>
-          <span class="status-badge ${getStatusClass(t.status)} ms-2">${t.status}</span>
-          ${bonusHtml}
-        </div>
-        ${tomadaHtml}
-      </div>
-      <p class="fw-bold mb-1" style="font-size:0.92rem;">${t.titulo}</p>
-      ${t.descripcion ? `<p class="text-muted mb-2" style="font-size:0.82rem;">${t.descripcion}</p>` : ''}
-      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-2">
-        <span class="text-muted" style="font-size:0.78rem;"><i class="bi bi-folder2"></i> ${t.proyecto} · <i class="bi bi-person-circle"></i> Por ${t.publicadaPor}</span>
-        ${accionHtml}
-      </div>
-    </div>`;
-}
-
-function tomarTarea(id) {
-  if (!confirm('¿Confirmas que quieres tomar esta tarea?')) return;
-  
-  callAPI('tomarTareaMarketplace', {
-    idTarea: id,
-    emailUsuario: state.email
-  })
-    .then(res => {
-      if (res.error) toast(res.error, 'error');
-      else { toast(res.msg, 'success'); cargarMarketplace(); }
-    })
-    .catch(err => toast('Error: ' + err.message, 'error'));
-}
-
-function cancelarMP(id) {
-  if (!confirm('¿Cancelar esta tarea del Marketplace? Quedará registrada en el Archivo como Cancelada.')) return;
-  
-  callAPI('cancelarTareaMarketplace', {
-    idTarea: id,
-    emailManager: state.email
-  })
-    .then(res => {
-      if (res.error) toast(res.error, 'error');
-      else { toast(res.msg, 'success'); cargarMarketplace(); }
-    })
-    .catch(err => toast('Error: ' + err.message, 'error'));
-}
-
-function abrirModalPublicarMP() {
-  callAPI('obtenerTareasMarketplace', {})
-    .then(tareas => {
-      const activas = tareas.filter(t => t.status !== 'Done' && t.status !== 'Cancelada' && t.status !== 'Promovida al Backlog');
-      const avisoDiv   = document.getElementById('avisoDuplicados');
-      const listaUl    = document.getElementById('listaDuplicados');
-      if (activas.length > 0) {
-        listaUl.innerHTML = activas.map(t => `<li><strong>${t.id}</strong> — ${t.titulo} (${t.status})</li>`).join('');
-        avisoDiv.classList.remove('d-none');
-      } else {
-        avisoDiv.classList.add('d-none');
-      }
-    })
-    .catch(err => toast('Error: ' + err.message, 'error'));
-  new bootstrap.Modal(document.getElementById('modalPublicarMP')).show();
-}
-
-function publicarMP() {
-  const titulo   = document.getElementById('mp-titulo').value.trim();
-  const desc     = document.getElementById('mp-descripcion').value.trim();
-  const proyecto = document.getElementById('mp-proyecto').value;
-  if (!titulo || !desc || !proyecto) { toast('Completa todos los campos obligatorios.', 'error'); return; }
-  const btn = document.getElementById('btnPublicarMPGuardar');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Publicando...';
-  
-  callAPI('publicarTareaMarketplace', {
-    titulo,
-    descripcion: desc,
-    proyecto,
-    bonus: document.getElementById('mp-bonus').value.trim(),
-    emailManager: state.email
-  })
-    .then(res => {
-      toast(res.msg, 'success');
-      bootstrap.Modal.getInstance(document.getElementById('modalPublicarMP')).hide();
-      document.getElementById('mp-titulo').value = '';
-      document.getElementById('mp-descripcion').value = '';
-      document.getElementById('mp-bonus').value = '';
-      btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-megaphone"></i> Publicar y Notificar Equipo';
-      cargarMarketplace();
-    })
-    .catch(err => {
-      toast('Error: ' + err.message, 'error');
-      btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-megaphone"></i> Publicar y Notificar Equipo';
-    });
-}
-
-function abrirActualizarMP(id) {
-  document.getElementById('mp-update-id').value = id;
-  document.getElementById('mp-update-link').value = '';
-  new bootstrap.Modal(document.getElementById('modalActualizarMP')).show();
-}
-
-function guardarActualizacionMP() {
-  const id     = document.getElementById('mp-update-id').value;
-  const link   = document.getElementById('mp-update-link').value;
-  const estado = document.getElementById('mp-update-estado').value;
-  const btn    = document.getElementById('btnGuardarMP');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
-  
-  callAPI('actualizarTareaMarketplace', {
-    idTarea: id,
-    nuevoLink: link,
-    nuevoEstado: estado
-  })
-    .then(res => {
-      if (res.error) toast(res.error, 'error');
-      else { toast(res.msg, 'success'); bootstrap.Modal.getInstance(document.getElementById('modalActualizarMP')).hide(); cargarMarketplace(); }
-      btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Guardar';
-    })
-    .catch(err => {
-      toast('Error: ' + err.message, 'error');
-      btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Guardar';
-    });
-}
-
-function abrirModalPromover(id, titulo) {
-  document.getElementById('prom-id').value = id;
-  document.getElementById('prom-info').innerHTML = `<i class="bi bi-arrow-up-circle"></i> <strong>${id}</strong>: ${titulo}`;
-  document.getElementById('prom-deadline').value = '';
-  new bootstrap.Modal(document.getElementById('modalPromover')).show();
-}
-
-function confirmarPromover() {
-  const id       = document.getElementById('prom-id').value;
-  const asignado = document.getElementById('prom-asignado').value;
-  const deadline = document.getElementById('prom-deadline').value;
-  const btn      = document.getElementById('btnConfirmarProm');
-  if (!asignado || !deadline) { toast('Selecciona asignado y fecha límite.', 'error'); return; }
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Promoviendo...';
-  
-  callAPI('promoverTareaMarketplace', {
-    idTarea: id,
-    asignado,
-    deadline,
-    emailManager: state.email
-  })
-    .then(res => {
-      if (res.error) toast(res.error, 'error');
-      else {
-        toast(res.msg, 'success');
-        bootstrap.Modal.getInstance(document.getElementById('modalPromover')).hide();
-        cargarMarketplace();
-      }
-      btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Promover y Asignar';
-    })
-    .catch(err => {
-      toast('Error: ' + err.message, 'error');
-      btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg"></i> Promover y Asignar';
-    });
-}
-
-// ═══════════════════════════════════════════════════
-// HISTÓRICO
-// ═══════════════════════════════════════════════════
-function renderizarHistorico(tareas) {
-  document.getElementById('loaderHistorico').classList.add('d-none');
-  const tbody = document.getElementById('tablaHistorico');
-  if (tareas.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted">No hay tareas completadas todavía.</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = tareas.map(t => `
-    <tr>
-      <td class="text-muted small fw-bold">${t.id}</td>
-      <td class="fw-bold" style="font-size:0.85rem;">${t.tarea}</td>
-      <td><span class="status-badge s-todo">${t.proyecto}</span></td>
-      <td class="text-muted small">${t.asignado}</td>
-      <td class="small">${t.fechaCompletada}</td>
-      <td>${t.outputLink ? `<a href="${t.outputLink}" target="_blank" class="btn-outline-sm"><i class="bi bi-box-arrow-up-right"></i> Ver</a>` : '<span class="text-muted small">Sin link</span>'}</td>
-    </tr>`).join('');
-}
-
-// ═══════════════════════════════════════════════════
-// DASHBOARD
-// ═══════════════════════════════════════════════════
-function renderizarDashboard(datos) {
-  document.getElementById('loaderDashboard').classList.add('d-none');
-  document.getElementById('contenidoDashboard').classList.remove('d-none');
-  const tbody = document.getElementById('tablaRendimiento');
-  datos.rendimiento.sort((a, b) => b.stats.total - a.stats.total);
-  tbody.innerHTML = datos.rendimiento.map(u => `
-    <tr>
-      <td class="fw-bold">${u.nombre}</td>
-      <td class="text-center fw-bold">${u.stats.total}</td>
-      <td class="text-center text-muted">${u.stats.todo}</td>
-      <td class="text-center" style="color:var(--info);">${u.stats.inProgress}</td>
-      <td class="text-center" style="color:var(--warning);">${u.stats.inReview}</td>
-      <td class="text-center" style="color:var(--success);">${u.stats.done}</td>
-    </tr>`).join('');
-  const ctx = document.getElementById('graficaEstados').getContext('2d');
-  if (state.chartInstancia) state.chartInstancia.destroy();
-  state.chartInstancia = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['To Do','In Progress','En Revisión','Done'],
-      datasets: [{
-        data: [datos.totalStatus['To Do']||0, datos.totalStatus['In Progress']||0, datos.totalStatus['En revisión']||0, datos.totalStatus['Done']||0],
-        backgroundColor: ['#d0d0cc','#1a5276','#d68910','#1e8449'],
-        borderWidth: 0
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
-  });
-}
-
-// ═══════════════════════════════════════════════════
-// HELPERS UI
-// ═══════════════════════════════════════════════════
-function toggleBody(id, btn) {
-  const el   = document.getElementById(id);
-  const open = el.style.display === 'block';
-  el.style.display = open ? 'none' : 'block';
-  if (btn) btn.innerHTML = open ? 'Abrir <i class="bi bi-chevron-down"></i>' : 'Cerrar <i class="bi bi-chevron-up"></i>';
-}
-
-function getPrioClass(p) {
-  if (!p) return 'prio-default';
-  const l = p.toLowerCase();
-  if (l.includes('urgent')) return 'prio-urgent';
-  if (l.includes('important')) return 'prio-important';
-  if (l.includes('poca') || l.includes('low')) return 'prio-low';
-  return 'prio-default';
-}
-
-function getStatusClass(s) {
-  if (!s) return 's-todo';
-  const l = s.toLowerCase();
-  if (l.includes('progress')) return 's-progress';
-  if (l.includes('revisión') || l.includes('revision')) return 's-review';
-  if (l === 'done') return 's-done';
-  if (l === 'cancelada') return 's-cancel';
-  if (l.includes('progreso') || l === 'en progreso') return 's-mp';
-  return 's-todo';
-}
-
-function getDeadlineClass(d) {
-  if (!d || d === 'Sin fecha') return '';
-  try {
-    const parts = d.split('/');
-    const fecha = parts.length === 3 ? new Date(parts[2], parts[1]-1, parts[0]) : new Date(d);
-    const hoy   = new Date(); hoy.setHours(0,0,0,0);
-    const diff  = (fecha - hoy) / 86400000;
-    if (diff < 0 || diff <= 2) return 'deadline-hot';
-    if (diff <= 5) return 'deadline-warn';
-  } catch(e) {}
-  return '';
+function mostrarError(msg) {
+  const errDiv = document.getElementById('loginError');
+  errDiv.innerText = msg;
+  errDiv.classList.add('show');
 }
 
 function toast(msg, tipo = 'success') {
@@ -1540,6 +513,13 @@ function toast(msg, tipo = 'success') {
   el.className = `gda-toast ${tipo} show`;
   setTimeout(() => el.classList.remove('show'), 3500);
 }
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+window.onload = () => {
+  document.getElementById('loaderBase').classList.add('d-none');
+};
 </script>
 </body>
 </html>
